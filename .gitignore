@@ -130,3 +130,4 @@ dmypy.json
 
 # Bot properties containing sensitive data
 bot.properties
+alt.properties

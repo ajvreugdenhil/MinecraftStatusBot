@@ -3,6 +3,11 @@ from mcrcon import MCRcon
 from mcstatus import MinecraftServer
 import sys
 import os
+import logging
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 # Default settings
 serverUrl = ""
@@ -25,7 +30,7 @@ try:
     discordChannelName = os.environ.get("DISCORD_CHANNEL_NAME")
     discordPrefix = os.environ.get("DISCORD_PREFIX")
 except:
-    print("oh no")
+    logger.critical("Parsing env vars failed. exiting.")
     sys.exit(1)
 
 # Convert ports to integers
@@ -34,18 +39,20 @@ rconPort = int(rconPortString)
 
 # Check obligatory settings
 if serverUrl == "":
-    print("ERROR. No serverurl given")
-    exit()
+    logger.critical("no url given. exiting.")
+    sys.exit(1)
 if discordToken == "" or discordToken is None:
-    print("ERROR. No discord bot token given")
-    exit()
+    logger.critical("No discord token given. exiting.")
+    sys.exit(1)
 
 # Classes to pull data from
 rcon = MCRcon(localIp, rconPassword)
 try:
     rcon.connect()
 except ConnectionRefusedError:
-    print("RCON Connection refused")
+    logger.error("RCON Connection refused")
+except:
+    logger.error("Unexpected error while trying to connect to RCON")
 
 localServer = MinecraftServer(localIp, queryPort)
 urlServer = MinecraftServer(serverUrl, queryPort)
@@ -62,24 +69,26 @@ def generateStatus():
         urlStatus = urlServer.status()
         urlLatency = str(urlStatus.latency)
     except:
-        print("Error while contacting server over url")
+        logger.error("Error while contacting server over url")
 
     try:
         localStatus = localServer.status()
         localLatency = str(localStatus.latency)
         playerAmountOnline = localStatus.players.online
         maxPlayerAmount = localStatus.players.max
-        for player in localStatus.players.sample:
-            playerList += player.name + ", "
-        playerList = playerList[:-2] #remove last comma
-        playerList += "."
+        players = localStatus.players.sample
+        if playerAmountOnline > 0: # Quite hacky with the random dependency but ok
+            for player in players:
+                playerList += player.name + ", "
+            playerList = playerList[:-2] # Remove last comma
+            playerList += "."
     except:
-        print("Error while contacting server locally")
-
+        logger.error("Error while contacting server locally")
+    
     try:
         tps = rcon.command("tps")
     except:
-        print("Rcon connection failed")
+        logger.error("Rcon connection failed")
     tps = tps[29:]
     tps = tps.replace('§a', '')
 
@@ -105,7 +114,7 @@ def generateStatus():
 
 class MyClient(discord.Client):
     async def on_ready(self):
-        print('Logged on as {0}!'.format(self.user))
+        logger.info('Logged on as {0}!'.format(self.user))
 
     async def on_message(self, message):
         # Ignore all messages in irrelevant channels
@@ -117,12 +126,12 @@ class MyClient(discord.Client):
             command.replace(discordPrefix, "")
 
         if  (command == 'status'):
-            print("Status command received")
+            logger.debug("Status command received")
             await message.channel.send('Hi! I\'m the mc status bot. Find me at github.com/ajvreugdenhil/MinecraftStatusBot')
             await message.channel.send(generateStatus())
 
         if  (command == 'say'):
-            print("Send command received")
+            logger.debug("Send command received")
             if " " not in message.content:
                 await message.channel.send("Send command requires 1 parameter")
                 return
@@ -131,7 +140,7 @@ class MyClient(discord.Client):
             try:
                 rcon.command("say " + "<" + sender + "> " + messagebody)
             except BrokenPipeError:
-                print("No Pipe for RCON command")
+                logger.error("No Pipe for RCON command")
 
 client = MyClient()
 client.run(discordToken)

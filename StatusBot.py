@@ -2,11 +2,7 @@ import discord
 from mcrcon import MCRcon
 from mcstatus import MinecraftServer
 import sys
-
-path_to_settings = "bot.properties"
-if (len(sys.argv) > 1):
-    path_to_settings = sys.argv[1]
-print("using properties file: " + path_to_settings)
+import os
 
 # Default settings
 serverUrl = ""
@@ -18,32 +14,19 @@ discordToken = ""
 discordChannelName = ""
 discordPrefix = ""
 
-# Read all settings and write to variables
-rawSettings = open(path_to_settings, "r")
-settings = rawSettings.read().splitlines()
-for setting in settings:
-    settingAsList = setting.split("=")
-    settingId = settingAsList[0]
-    settingValue = settingAsList[1]
-    if settingId == "SERVER-URL":
-        serverUrl = settingValue
-    elif settingId == "LOCAL-IP":
-        localIp = settingValue
-    elif settingId == "QUERY-PORT":
-        queryPortString = settingValue
-    elif settingId == "RCON-PORT":
-        rconPortString = settingValue
-    elif settingId == "RCON-PASSWORD":
-        rconPassword = settingValue
-    elif settingId == "DISCORD-TOKEN":
-        discordToken = settingValue
-    elif settingId == "DISCORD-CHANNEL-NAME":
-        discordChannelName = settingValue
-    elif settingId == "DISCORD-PREFIX":
-        discordPrefix = settingValue
-    else:
-        print("ERROR, invalid settingId! " + settingId + ":" + settingValue)
-rawSettings.close()
+try: 
+    serverUrl = os.environ.get("SERVER_URL")
+    discordToken = os.environ.get("DISCORD_TOKEN")
+    
+    localIp = os.environ.get("LOCAL_IP")
+    queryPortString = os.environ.get("QUERY_PORT")
+    rconPortString = os.environ.get("RCON_PORT")
+    rconPassword = os.environ.get("RCON_PASSWORD")
+    discordChannelName = os.environ.get("DISCORD_CHANNEL_NAME")
+    discordPrefix = os.environ.get("DISCORD_PREFIX")
+except:
+    print("oh no")
+    sys.exit(1)
 
 # Convert ports to integers
 queryPort = int(queryPortString)
@@ -53,13 +36,17 @@ rconPort = int(rconPortString)
 if serverUrl == "":
     print("ERROR. No serverurl given")
     exit()
-if discordToken == "":
+if discordToken == "" or discordToken is None:
     print("ERROR. No discord bot token given")
     exit()
 
 # Classes to pull data from
 rcon = MCRcon(localIp, rconPassword)
-rcon.connect()
+try:
+    rcon.connect()
+except ConnectionRefusedError:
+    print("RCON Connection refused")
+
 localServer = MinecraftServer(localIp, queryPort)
 urlServer = MinecraftServer(serverUrl, queryPort)
 
@@ -141,7 +128,10 @@ class MyClient(discord.Client):
                 return
             messagebody = message.content.split(" ", 1)[1]
             sender = message.author.name
-            rcon.command("say " + "<" + sender + "> " + messagebody)
+            try:
+                rcon.command("say " + "<" + sender + "> " + messagebody)
+            except BrokenPipeError:
+                print("No Pipe for RCON command")
 
 client = MyClient()
 client.run(discordToken)

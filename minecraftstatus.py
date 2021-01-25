@@ -98,7 +98,7 @@ class MinecraftStatus():
                     await sendNotifications("Someone started playing on the server :D")
                 elif playerAmountOnline == 0:
                     await sendNotifications("Awh, the server is all empty now :(")
-            await asyncio.sleep(0.0001)
+            await asyncio.sleep(0.5)
 
     def say(self, message):
         try:

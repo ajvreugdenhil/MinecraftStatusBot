@@ -131,3 +131,5 @@ dmypy.json
 # Bot properties containing sensitive data
 bot.properties
 alt.properties
+.env
+.env_fish

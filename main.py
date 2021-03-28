@@ -22,26 +22,23 @@ discordToken = ""
 discordChannelName = ""
 discordPrefix = ""
 
-try:
-    serverUrl = os.environ.get("SERVER_URL")
-    discordToken = os.environ.get("DISCORD_TOKEN")
-    localIp = os.environ.get("LOCAL_IP")
-    queryPortString = os.environ.get("QUERY_PORT")
-    rconPortString = os.environ.get("RCON_PORT")
-    rconPassword = os.environ.get("RCON_PASSWORD")
-except:
+discordChannelName = os.environ.get("DISCORD_CHANNEL_NAME")
+discordPrefix = os.environ.get("DISCORD_PREFIX")
+if (discordChannelName == None) and (discordPrefix==None):
+    logger.error("No prefix nor channel specified!")
+
+localIp = os.environ.get("LOCAL_IP")
+queryPortString = os.environ.get("QUERY_PORT")
+rconPortString = os.environ.get("RCON_PORT")
+if (localIp==None) or (queryPortString==None) or (rconPortString==None):
+    logger.info("Using default value(s)")
+
+serverUrl = os.environ.get("SERVER_URL")
+discordToken = os.environ.get("DISCORD_TOKEN")
+rconPassword = os.environ.get("RCON_PASSWORD")
+if (serverUrl==None) or (discordToken==None) or (rconPassword==None):
     logger.critical("Parsing env vars failed. exiting.")
     sys.exit(1)
-
-try:
-    discordChannelName = os.environ.get("DISCORD_CHANNEL_NAME")
-except:
-    discordChannelName = None
-
-try:
-    discordPrefix = os.environ.get("DISCORD_PREFIX")
-except:
-    discordPrefix = None
 
 # Convert ports to integers
 queryPort = int(queryPortString)

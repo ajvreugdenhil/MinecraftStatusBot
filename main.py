@@ -24,19 +24,24 @@ discordPrefix = ""
 
 try:
     serverUrl = os.environ.get("SERVER_URL")
-
     discordToken = os.environ.get("DISCORD_TOKEN")
-
     localIp = os.environ.get("LOCAL_IP")
     queryPortString = os.environ.get("QUERY_PORT")
     rconPortString = os.environ.get("RCON_PORT")
     rconPassword = os.environ.get("RCON_PASSWORD")
-
-    discordChannelName = os.environ.get("DISCORD_CHANNEL_NAME")
-    discordPrefix = os.environ.get("DISCORD_PREFIX")
 except:
     logger.critical("Parsing env vars failed. exiting.")
     sys.exit(1)
+
+try:
+    discordChannelName = os.environ.get("DISCORD_CHANNEL_NAME")
+except:
+    discordChannelName = None
+
+try:
+    discordPrefix = os.environ.get("DISCORD_PREFIX")
+except:
+    discordPrefix = None
 
 # Convert ports to integers
 queryPort = int(queryPortString)
@@ -51,14 +56,11 @@ if discordToken == "" or discordToken is None:
     sys.exit(1)
 
 
-def sayHi():
-    print("HI")
-
-
 async def main():
     mcstatus = minecraftstatus.MinecraftStatus(
         serverUrl, localIp, rconPort, queryPort, rconPassword)
-    client = discordbot.MyClient(mcstatus.generateStatus, mcstatus.say)
+    client = discordbot.MyClient(
+        mcstatus.generateStatus, mcstatus.say, discordPrefix, discordChannelName)
 
     bot_future = client.start(discordToken)
     status_future = mcstatus.watch(client.notify)
@@ -74,6 +76,6 @@ if __name__ == "__main__":
     try:
         loop.run_until_complete(main())
     except KeyboardInterrupt:
-        logger.warning("Stopping")  # FIXME?
+        logger.info("Stopping")
     finally:
         loop.close()

@@ -8,9 +8,11 @@ logger.setLevel(logging.DEBUG)
 
 
 class MyClient(discord.Client):
-    def __init__(self, getStatus, say):
+    def __init__(self, getStatus, say, prefix=None, channelname=None):
         self.getStatus = getStatus
         self.say = say
+        self.prefix = prefix
+        self.channelname = channelname
         discord.Client.__init__(self)
         self.subscribers = []
 
@@ -21,41 +23,54 @@ class MyClient(discord.Client):
             await self.get_channel(sub).send(message)
 
     async def on_ready(self):
-        logger.info('Logged on as {0}!'.format(self.user))
+        logger.info('Logged on as {0}'.format(self.user))
 
     async def on_message(self, message):
-        discordChannelName = "famcrafttest"  # FIXME
-        # Ignore all messages in irrelevant channels
-        if not (message.channel.name == discordChannelName or discordChannelName == ""):
+        # Don't respond to bots
+        if message.author.bot:
+            return
+        if self.channelname == None and self.prefix == None:
+            logger.error(
+                "Prefix and channel not set. Ignoring message to prevent spam!")
             return
 
+        # TODO: read discord response messages from translation file
+        # that also allows the operator to cut out some cringe
+
+        # Ignore all messages in irrelevant channels
+        if not (message.channel.name == self.channelname or self.channelname == ""):
+            return
         command = message.content.lower().split(" ")[0]
 
-        '''
-        # TODO: check for prefix
-        if discordPrefix != "":
-            command.replace(discordPrefix, "")
-        '''
+        if (self.prefix != None) and (not command.startswith(self.prefix)):
+            return
+        if self.prefix != None:
+            command = command.replace(self.prefix, "")
 
         if (command == 'help'):
             logger.debug("help command received")
-            await message.channel.send("help, sub, unsub, status, say")
+            await message.channel.send('Hi! I\'m the mc status bot. Find me at https://github.com/ajvreugdenhil/MinecraftStatusBot')
+            await message.channel.send("Available commands: ```\n-help \n-sub \n-unsub \n-status \n-say```")
 
         if (command == 'sub'):
             logger.debug("sub command received")
-            await message.channel.send("Liked and subscribed! 😄 Unsubscribe with \"unsub\"")
             channelId = message.channel.id
             if channelId not in self.subscribers:
                 self.subscribers.append(channelId)
+                await message.channel.send("Liked and subscribed! 😄 Unsubscribe with \"unsub\"")
+            else:
+                await message.channel.send("Already subscribed!")
 
         if (command == 'unsub'):
             logger.debug("unsub command received")
-            await message.channel.send("😔 goodbye...")
-            self.subscribers.remove(message.channel.id)
+            if (message.channel.id in self.subscribers):
+                self.subscribers.remove(message.channel.id)
+                await message.channel.send("😔 goodbye...")
+            else:
+                await message.channel.send("Uh oh, you weren't subscribed")
 
         if (command == 'status'):
             logger.debug("Status command received")
-            await message.channel.send('Hi! I\'m the mc status bot. Find me at github.com/ajvreugdenhil/MinecraftStatusBot')
             await message.channel.send(self.getStatus())
 
         if (command == 'say'):
@@ -67,3 +82,4 @@ class MyClient(discord.Client):
             sender = message.author.name
             payload = "<" + sender + "> " + messagebody
             self.say(payload)
+            await message.channel.send("Sent!")

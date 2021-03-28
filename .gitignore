@@ -133,3 +133,5 @@ bot.properties
 alt.properties
 .env
 .env_fish
+
+docker-compose.yml

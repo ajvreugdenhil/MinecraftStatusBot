@@ -18,7 +18,9 @@ class MinecraftStatus():
         self.urlServer = MinecraftServer(serverUrl, queryPort)
         self.rcon = MCRcon(localIp, rconPassword)
         self.previousPlayerAmountOnline = None
+        self.rconConnect()
 
+    def rconConnect(self):
         try:
             self.rcon.connect()
         except ConnectionRefusedError:
@@ -58,6 +60,7 @@ class MinecraftStatus():
             tps = self.rcon.command("tps")
         except:
             logger.error("Rcon connection failed")
+            self.rconConnect()
         tps = tps[29:]
         tps = tps.replace('§a', '')
 
@@ -105,3 +108,4 @@ class MinecraftStatus():
             self.rcon.command("say " + message)
         except BrokenPipeError:
             logger.error("No Pipe for RCON command")
+            self.rconConnect()

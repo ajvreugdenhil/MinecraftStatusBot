@@ -1,0 +1,8 @@
+export SERVER_URL=example.com
+export LOCAL_IP=192.168.1.1
+export QUERY_PORT=25565
+export RCON_PORT=25575
+export RCON_PASSWORD=
+export DISCORD_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+export DISCORD_CHANNEL_NAME=bot
+export DISCORD_PREFIX=!

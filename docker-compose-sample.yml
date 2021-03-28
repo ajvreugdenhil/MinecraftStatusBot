@@ -1,0 +1,15 @@
+version: "3"
+services:
+  discord-bot:
+    image: docker-minecraft-bot:latest
+    restart: always
+    environment:
+      SERVER_URL: "example.com"
+      LOCAL_IP: "localhost"
+      QUERY_PORT: 25565
+      RCON_PORT: 25575
+      RCON_PASSWORD: "xxxxxxxxxxxxxxx"
+      DISCORD_TOKEN: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      DISCORD_CHANNEL_NAME: "botchannel"
+    stdin_open: true
+    tty: true

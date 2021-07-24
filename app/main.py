@@ -1,16 +1,18 @@
 import discordbot
 import minecraftstatus
+from version import VERSION
 
 import sys
 import os
 import logging
-import time
 import asyncio
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+logger.info("Starting! using version " + VERSION)
 
 # Default settings
 serverUrl = ""
@@ -56,14 +58,16 @@ if discordToken == "" or discordToken is None:
 
 
 async def main():
+    logger.debug("Initializing")
     mcstatus = minecraftstatus.MinecraftStatus(
         serverUrl, localIp, rconPort, queryPort, rconPassword)
     client = discordbot.MyClient(
         mcstatus.generateStatus, mcstatus.say, mcstatus.command, discordPrefix, discordChannelName, discordModRole)
+    logger.debug("Init complete")
 
     bot_future = client.start(discordToken)
     status_future = mcstatus.watch(client.notify)
-
+    
     await asyncio.wait([bot_future, status_future])
     client.logout()
     logger.debug("Finished")

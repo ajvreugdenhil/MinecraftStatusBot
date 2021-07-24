@@ -1,7 +1,6 @@
 from mcrcon import MCRcon
 from mcstatus import MinecraftServer
 import logging
-import time
 import asyncio
 
 logging.basicConfig(
@@ -12,11 +11,10 @@ logger.setLevel(logging.DEBUG)
 
 class MinecraftStatus():
     def __init__(self, serverUrl, localIp, rconPort, queryPort, rconPassword):
-        # FIXME is rconport used?
         self.serverUrl = serverUrl
         self.localServer = MinecraftServer(localIp, queryPort)
         self.urlServer = MinecraftServer(serverUrl, queryPort)
-        self.rcon = MCRcon(localIp, rconPassword)
+        self.rcon = MCRcon(localIp, rconPassword, port=rconPort)
         self.previousPlayerAmountOnline = None
         self.rconConnect()
 
@@ -58,15 +56,6 @@ class MinecraftStatus():
             logger.error("Error getting local server status")
         
 
-        '''
-        try: 
-            localQuery = self.localServer.query() #times out
-            mapName = localQuery.motd
-        except:
-            logger.error("Error getting local server query")
-        '''
-
-
         try:
             tps = self.rcon.command("tps")
         except:
@@ -77,7 +66,6 @@ class MinecraftStatus():
 
         response = "```"
         response += 'Status report for ' + self.serverUrl + ': \n'
-        # response += 'loaded map is ' + mapName + ': \n'
         if urlLatency != -1:
             response += "The server replied over DNS in " + \
                 str(urlLatency) + 'ms\n'
@@ -103,7 +91,7 @@ class MinecraftStatus():
         if self.previousPlayerAmountOnline is None:
             self.previousPlayerAmountOnline = self.localServer.status().players.online
             logger.debug("Initting prev players online")
-        while True:  # FIXME?
+        while True:  # TODO: add stop flag
             localStatus = self.localServer.status()
             playerAmountOnline = localStatus.players.online
             if playerAmountOnline != self.previousPlayerAmountOnline:

@@ -1,11 +1,26 @@
 import discord
 import logging
+from version import VERSION
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+# TODO: read discord response messages from translation file
+# that also allows the operator to cut out some cringe
+message_help = "Available commands: ```\n-about \n-help \n-sub \n-unsub \n-status \n-say \n-#script#```"
+message_about = \
+f'''
+Hi! I\'m the mc status bot. Find me at https://github.com/ajvreugdenhil/MinecraftStatusBot
+Important functionality is getting server health; watching for players coming online; and scripting mc commands.
+Some functionality may be disabled if my config is not properly set!
+I'm currently version {VERSION}
+'''
+message_subscribed = "Liked and subscribed! 😄 Unsubscribe with \"unsub\""
+message_alreadysubscribed = "Already subscribed!"
+message_unsubscribed = "😔 goodbye..."
+message_alreadyunsubscribed = "Uh oh, you weren't subscribed"
 
 class MyClient(discord.Client):
     def __init__(self, getStatus, say, mcCommand, prefix=None, channelname=None, modRole=None):
@@ -36,8 +51,6 @@ class MyClient(discord.Client):
                 "Prefix and channel not set. Ignoring message to prevent spam!")
             return
 
-        # TODO: read discord response messages from translation file
-        # that also allows the operator to cut out some cringe
 
         # Ignore all messages in irrelevant channels
         if not (message.channel.name == self.channelname or self.channelname == ""):
@@ -51,25 +64,28 @@ class MyClient(discord.Client):
 
         if (command == 'help'):
             logger.debug("help command received")
-            await message.channel.send('Hi! I\'m the mc status bot. Find me at https://github.com/ajvreugdenhil/MinecraftStatusBot')
-            await message.channel.send("Available commands: ```\n-help \n-sub \n-unsub \n-status \n-say \n-#script#```")
+            await message.channel.send(message_help)
+
+        if (command == 'about'):
+            logger.debug("about command received")
+            await message.channel.send(message_about)
 
         if (command == 'sub'):
             logger.debug("sub command received")
             channelId = message.channel.id
             if channelId not in self.subscribers:
                 self.subscribers.append(channelId)
-                await message.channel.send("Liked and subscribed! 😄 Unsubscribe with \"unsub\"")
+                await message.channel.send(message_subscribed)
             else:
-                await message.channel.send("Already subscribed!")
+                await message.channel.send(message_alreadysubscribed)
 
         if (command == 'unsub'):
             logger.debug("unsub command received")
             if (message.channel.id in self.subscribers):
                 self.subscribers.remove(message.channel.id)
-                await message.channel.send("😔 goodbye...")
+                await message.channel.send(message_unsubscribed)
             else:
-                await message.channel.send("Uh oh, you weren't subscribed")
+                await message.channel.send(message_alreadyunsubscribed)
 
         if (command == 'status'):
             logger.debug("Status command received")

@@ -35,6 +35,7 @@ class MinecraftStatus():
         playerAmountOnline = -1
         maxPlayerAmount = -1
         playerList = ""
+        mapName = ""
 
         try:
             urlStatus = self.urlServer.status()
@@ -48,13 +49,23 @@ class MinecraftStatus():
             playerAmountOnline = localStatus.players.online
             maxPlayerAmount = localStatus.players.max
             players = localStatus.players.sample
-            if playerAmountOnline > 0:  # Quite hacky with the random dependency but ok
+            if playerAmountOnline > 0:
                 for player in players:
                     playerList += player.name + ", "
                 playerList = playerList[:-2]  # Remove last comma
                 playerList += "."
         except:
-            logger.error("Error while contacting server locally")
+            logger.error("Error getting local server status")
+        
+
+        '''
+        try: 
+            localQuery = self.localServer.query() #times out
+            mapName = localQuery.motd
+        except:
+            logger.error("Error getting local server query")
+        '''
+
 
         try:
             tps = self.rcon.command("tps")
@@ -66,6 +77,7 @@ class MinecraftStatus():
 
         response = "```"
         response += 'Status report for ' + self.serverUrl + ': \n'
+        # response += 'loaded map is ' + mapName + ': \n'
         if urlLatency != -1:
             response += "The server replied over DNS in " + \
                 str(urlLatency) + 'ms\n'
@@ -104,8 +116,11 @@ class MinecraftStatus():
             await asyncio.sleep(0.5)
 
     def say(self, message):
+        self.command("say " + message)
+
+    def command(self, message):
         try:
-            self.rcon.command("say " + message)
+            self.rcon.command(message)
         except BrokenPipeError:
             logger.error("No Pipe for RCON command")
             self.rconConnect()

@@ -21,6 +21,7 @@ rconPassword = ""
 discordToken = ""
 discordChannelName = ""
 discordPrefix = ""
+discordModRole = ""
 
 discordChannelName = os.environ.get("DISCORD_CHANNEL_NAME")
 discordPrefix = os.environ.get("DISCORD_PREFIX")
@@ -30,7 +31,8 @@ if (discordChannelName == None) and (discordPrefix==None):
 localIp = os.environ.get("LOCAL_IP")
 queryPortString = os.environ.get("QUERY_PORT")
 rconPortString = os.environ.get("RCON_PORT")
-if (localIp==None) or (queryPortString==None) or (rconPortString==None):
+discordModRole = os.environ.get("DISCORD_MOD_ROLE")
+if (localIp==None) or (queryPortString==None) or (rconPortString==None) or (discordModRole==None):
     logger.info("Using default value(s)")
 
 serverUrl = os.environ.get("SERVER_URL")
@@ -57,7 +59,7 @@ async def main():
     mcstatus = minecraftstatus.MinecraftStatus(
         serverUrl, localIp, rconPort, queryPort, rconPassword)
     client = discordbot.MyClient(
-        mcstatus.generateStatus, mcstatus.say, discordPrefix, discordChannelName)
+        mcstatus.generateStatus, mcstatus.say, mcstatus.command, discordPrefix, discordChannelName, discordModRole)
 
     bot_future = client.start(discordToken)
     status_future = mcstatus.watch(client.notify)

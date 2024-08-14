@@ -1,5 +1,5 @@
 from mcrcon import MCRcon
-from mcstatus import MinecraftServer
+from mcstatus import JavaServer
 import logging
 import asyncio
 
@@ -12,8 +12,8 @@ logger.setLevel(logging.DEBUG)
 class MinecraftStatus():
     def __init__(self, serverUrl, localIp, rconPort, queryPort, rconPassword):
         self.serverUrl = serverUrl
-        self.localServer = MinecraftServer(localIp, queryPort)
-        self.urlServer = MinecraftServer(serverUrl, queryPort)
+        self.localServer = JavaServer.lookup(localIp, queryPort)
+        self.urlServer = JavaServer.lookup(serverUrl, queryPort)
         self.rcon = MCRcon(localIp, rconPassword, port=rconPort)
         self.previousPlayerAmountOnline = None
         self.rconConnect()

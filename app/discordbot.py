@@ -28,7 +28,10 @@ class MyClient(discord.Client):
         self.say = say
         self.prefix = prefix
         self.channelname = channelname
-        discord.Client.__init__(self)
+        
+        intents = discord.Intents.default()  
+        intents.message_content = True
+        discord.Client.__init__(self, intents=intents)
         self.subscribers = []
         self.modRole = modRole
         self.mcCommand = mcCommand
@@ -51,12 +54,12 @@ class MyClient(discord.Client):
                 "Prefix and channel not set. Ignoring message to prevent spam!")
             return
 
-
+        
         # Ignore all messages in irrelevant channels
-        if not (message.channel.name == self.channelname or self.channelname == ""):
-            return
+        #if not (message.channel.name == self.channelname or self.channelname == ""):
+        #    return
         command = message.content.lower().split(" ")[0]
-
+        logger.debug(message)
         if (self.prefix != None) and (not command.startswith(self.prefix)):
             return
         if self.prefix != None:
@@ -86,7 +89,7 @@ class MyClient(discord.Client):
                 await message.channel.send(message_unsubscribed)
             else:
                 await message.channel.send(message_alreadyunsubscribed)
-
+        logger.debug(command)
         if (command == 'status'):
             logger.debug("Status command received")
             await message.channel.send(self.getStatus())
